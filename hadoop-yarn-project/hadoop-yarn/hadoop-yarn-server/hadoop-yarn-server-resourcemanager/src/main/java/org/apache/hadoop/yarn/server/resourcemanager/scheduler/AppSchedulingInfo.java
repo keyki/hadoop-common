@@ -39,6 +39,7 @@ import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.a.DummyScheduler;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 /**
@@ -119,11 +120,12 @@ public class AppSchedulingInfo {
    *
    * @param requests resources to be acquired
    */
-  synchronized public void updateResourceRequests(
-      List<ResourceRequest> requests) {
+  synchronized public void updateResourceRequests(List<ResourceRequest> requests) {
     QueueMetrics metrics = queue.getMetrics();
     
     // Update resource requests
+    LOG.info(DummyScheduler.LOG_PREFIX + "Existing resource requests: " + this.requests);
+    LOG.info(DummyScheduler.LOG_PREFIX + "Updating resource requests with: " + requests);
     for (ResourceRequest request : requests) {
       Priority priority = request.getPriority();
       String resourceName = request.getResourceName();
@@ -215,8 +217,8 @@ public class AppSchedulingInfo {
     return ret;
   }
 
-  synchronized public ResourceRequest getResourceRequest(Priority priority,
-      String resourceName) {
+  synchronized public ResourceRequest getResourceRequest(Priority priority, String resourceName) {
+    LOG.info(DummyScheduler.LOG_PREFIX + "Resource requests of application: " + applicationId + " is: " + requests);
     Map<String, ResourceRequest> nodeRequests = requests.get(priority);
     return (nodeRequests == null) ? null : nodeRequests.get(resourceName);
   }
@@ -262,13 +264,11 @@ public class AppSchedulingInfo {
       metrics.runAppAttempt(applicationId, user);
     }
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("allocate: applicationId=" + applicationId
+      LOG.info("Allocated: applicationId=" + applicationId
           + " container=" + container.getId()
           + " host=" + container.getNodeId().toString()
           + " user=" + user
           + " resource=" + request.getCapability());
-    }
     metrics.allocateResources(user, 1, request.getCapability(), true);
   }
 

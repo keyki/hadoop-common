@@ -52,6 +52,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.a.DummyScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerNode;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
@@ -150,7 +151,7 @@ public class ParentQueue implements CSQueue {
     this.queueComparator = cs.getQueueComparator();
     this.childQueues = new TreeSet<CSQueue>(queueComparator);
 
-    LOG.info("Initialized parent-queue " + queueName + 
+    LOG.info(DummyScheduler.LOG_PREFIX + "Initialized parent-queue " + queueName + 
         " name=" + queueName + 
         ", fullname=" + getQueuePath()); 
   }
@@ -188,7 +189,7 @@ public class ParentQueue implements CSQueue {
     CSQueueUtils.updateQueueStatistics(
         resourceCalculator, this, parent, clusterResource, minimumAllocation);
 
-    LOG.info(queueName +
+    LOG.info(DummyScheduler.LOG_PREFIX + queueName +
         ", capacity=" + capacity +
         ", asboluteCapacity=" + absoluteCapacity +
         ", maxCapacity=" + maximumCapacity +
@@ -198,7 +199,7 @@ public class ParentQueue implements CSQueue {
   }
 
   private static float PRECISION = 0.0005f; // 0.05% precision
-  void setChildQueues(Collection<CSQueue> childQueues) {
+  public void setChildQueues(Collection<CSQueue> childQueues) {
     
     // Validate
     float childCapacities = 0;
@@ -216,9 +217,7 @@ public class ParentQueue implements CSQueue {
     
     this.childQueues.clear();
     this.childQueues.addAll(childQueues);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("setChildQueues: " + getChildQueuesToPrint());
-    }
+      LOG.info(DummyScheduler.LOG_PREFIX + "setChildQueues: " + getChildQueuesToPrint());
   }
   
   @Override
@@ -399,7 +398,7 @@ public class ParentQueue implements CSQueue {
       if (childQueue != null) {
         // Re-init existing child queues
         childQueue.reinitialize(newChildQueue, clusterResource);
-        LOG.info(getQueueName() + ": re-configured queue: " + childQueue);
+        LOG.info(DummyScheduler.LOG_PREFIX + getQueueName() + ": re-configured queue: " + childQueue);
       } else {
         // New child queue, do not re-init
         
@@ -409,7 +408,7 @@ public class ParentQueue implements CSQueue {
         // Save in list of current child queues
         currentChildQueues.put(newChildQueueName, newChildQueue);
         
-        LOG.info(getQueueName() + ": added new child queue: " + newChildQueue);
+        LOG.info(DummyScheduler.LOG_PREFIX + getQueueName() + ": added new child queue: " + newChildQueue);
       }
     }
 
@@ -466,7 +465,7 @@ public class ParentQueue implements CSQueue {
       try {
         parent.submitApplication(applicationId, user, queue);
       } catch (AccessControlException ace) {
-        LOG.info("Failed to submit application to parent-queue: " + 
+        LOG.info(DummyScheduler.LOG_PREFIX + "Failed to submit application to parent-queue: " + 
             parent.getQueuePath(), ace);
         removeApplication(applicationId, user);
         throw ace;
@@ -492,7 +491,7 @@ public class ParentQueue implements CSQueue {
 
     ++numApplications;
 
-    LOG.info("Application added -" +
+    LOG.info(DummyScheduler.LOG_PREFIX + "Application added -" +
         " appId: " + applicationId + 
         " user: " + user + 
         " leaf-queue of parent: " + getQueueName() + 
@@ -517,7 +516,7 @@ public class ParentQueue implements CSQueue {
     
     --numApplications;
 
-    LOG.info("Application removed -" +
+    LOG.info(DummyScheduler.LOG_PREFIX + "Application removed -" +
         " appId: " + applicationId + 
         " user: " + user + 
         " leaf-queue of parent: " + getQueueName() + 
@@ -549,38 +548,31 @@ public class ParentQueue implements CSQueue {
   }
 
   @Override
-  public synchronized CSAssignment assignContainers(
-      Resource clusterResource, FiCaSchedulerNode node) {
-    CSAssignment assignment = 
-        new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
+  public synchronized CSAssignment assignContainers(Resource clusterResource, FiCaSchedulerNode node) {
+    CSAssignment assignment = new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
     
     while (canAssign(clusterResource, node)) {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Trying to assign containers to child-queue of "
-          + getQueueName());
-      }
-      
+        LOG.info(DummyScheduler.LOG_PREFIX + "Trying to assign containers: "+ clusterResource +
+          " to child-queue of "+ getQueueName());
+
       // Are we over maximum-capacity for this queue?
       if (!assignToQueue(clusterResource)) {
         break;
       }
       
       // Schedule
-      CSAssignment assignedToChild = 
-          assignContainersToChildQueues(clusterResource, node);
+      CSAssignment assignedToChild = assignContainersToChildQueues(clusterResource, node);
       assignment.setType(assignedToChild.getType());
       
       // Done if no child-queue assigned anything
-      if (Resources.greaterThan(
-              resourceCalculator, clusterResource, 
-              assignedToChild.getResource(), Resources.none())) {
+      if (Resources.greaterThan(resourceCalculator, clusterResource, assignedToChild.getResource(), Resources.none())) {
         // Track resource utilization for the parent-queue
         allocateResource(clusterResource, assignedToChild.getResource());
         
         // Track resource utilization in this pass of the scheduler
         Resources.addTo(assignment.getResource(), assignedToChild.getResource());
         
-        LOG.info("assignedContainer" +
+        LOG.info(DummyScheduler.LOG_PREFIX + "assignedContainer" +
             " queue=" + getQueueName() + 
             " usedCapacity=" + getUsedCapacity() +
             " absoluteUsedCapacity=" + getAbsoluteUsedCapacity() +
@@ -591,22 +583,18 @@ public class ParentQueue implements CSQueue {
         break;
       }
 
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("ParentQ=" + getQueueName()
+        LOG.info(DummyScheduler.LOG_PREFIX + "ParentQ=" + getQueueName()
           + " assignedSoFarInThisIteration=" + assignment.getResource()
           + " usedCapacity=" + getUsedCapacity()
           + " absoluteUsedCapacity=" + getAbsoluteUsedCapacity());
-      }
 
       // Do not assign more than one container if this isn't the root queue
       // or if we've already assigned an off-switch container
       if (!rootQueue || assignment.getType() == NodeType.OFF_SWITCH) {
-        if (LOG.isDebugEnabled()) {
           if (rootQueue && assignment.getType() == NodeType.OFF_SWITCH) {
-            LOG.debug("Not assigning more than one off-switch container," +
+            LOG.info(DummyScheduler.LOG_PREFIX + "Not assigning more than one off-switch container," +
                 " assignments so far: " + assignment);
           }
-        }
         break;
       }
     } 
@@ -622,7 +610,7 @@ public class ParentQueue implements CSQueue {
             usedResources, clusterResource);
     
     if (currentCapacity >= absoluteMaxCapacity) {
-      LOG.info(getQueueName() + 
+      LOG.info(DummyScheduler.LOG_PREFIX + getQueueName() + 
           " used=" + usedResources + 
           " current-capacity (" + currentCapacity + ") " +
           " >= max-capacity (" + absoluteMaxCapacity + ")");
@@ -633,31 +621,25 @@ public class ParentQueue implements CSQueue {
   }
   
   private boolean canAssign(Resource clusterResource, FiCaSchedulerNode node) {
-    return (node.getReservedContainer() == null) && 
-        Resources.greaterThanOrEqual(resourceCalculator, clusterResource, 
+//    return (node.getReservedContainer() == null) &&
+        return Resources.greaterThanOrEqual(resourceCalculator, clusterResource,
             node.getAvailableResource(), minimumAllocation);
   }
   
-  synchronized CSAssignment assignContainersToChildQueues(Resource cluster, 
-      FiCaSchedulerNode node) {
-    CSAssignment assignment = 
-        new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
+  synchronized CSAssignment assignContainersToChildQueues(Resource cluster, FiCaSchedulerNode node) {
+    CSAssignment assignment = new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
     
     printChildQueues();
 
     // Try to assign to most 'under-served' sub-queue
     for (Iterator<CSQueue> iter=childQueues.iterator(); iter.hasNext();) {
       CSQueue childQueue = iter.next();
-      if(LOG.isDebugEnabled()) {
-        LOG.debug("Trying to assign to queue: " + childQueue.getQueuePath()
+        LOG.info("Trying to assign to queue: " + childQueue.getQueuePath()
           + " stats: " + childQueue);
-      }
       assignment = childQueue.assignContainers(cluster, node);
-      if(LOG.isDebugEnabled()) {
-        LOG.debug("Assigned to queue: " + childQueue.getQueuePath() +
+        LOG.info(DummyScheduler.LOG_PREFIX + "Assigned to queue: " + childQueue.getQueuePath() +
           " stats: " + childQueue + " --> " + 
           assignment.getResource() + ", " + assignment.getType());
-      }
 
       // If we do assign, remove the queue and re-insert in-order to re-sort
       if (Resources.greaterThan(
@@ -665,12 +647,10 @@ public class ParentQueue implements CSQueue {
               assignment.getResource(), Resources.none())) {
         // Remove and re-insert to sort
         iter.remove();
-        LOG.info("Re-sorting assigned queue: " + childQueue.getQueuePath() + 
+        LOG.info(DummyScheduler.LOG_PREFIX + "Re-sorting assigned queue: " + childQueue.getQueuePath() + 
             " stats: " + childQueue);
         childQueues.add(childQueue);
-        if (LOG.isDebugEnabled()) {
           printChildQueues();
-        }
         break;
       }
     }
@@ -686,10 +666,8 @@ public class ParentQueue implements CSQueue {
     return sb.toString();
   }
   void printChildQueues() {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("printChildQueues - queue: " + getQueuePath()
+      LOG.info("printChildQueues - queue: " + getQueuePath()
         + " child-queues: " + getChildQueuesToPrint());
-    }
   }
   
   @Override
@@ -704,7 +682,7 @@ public class ParentQueue implements CSQueue {
         releaseResource(clusterResource, 
             rmContainer.getContainer().getResource());
 
-        LOG.info("completedContainer" +
+        LOG.info(DummyScheduler.LOG_PREFIX + "completedContainer" +
             " queue=" + getQueueName() + 
             " usedCapacity=" + getUsedCapacity() +
             " absoluteUsedCapacity=" + getAbsoluteUsedCapacity() +
@@ -718,7 +696,7 @@ public class ParentQueue implements CSQueue {
         if(csqueue.equals(completedChildQueue))
         {
           iter.remove();
-          LOG.info("Re-sorting completed queue: " + csqueue.getQueuePath() + 
+          LOG.info(DummyScheduler.LOG_PREFIX + "Re-sorting completed queue: " + csqueue.getQueuePath() + 
               " stats: " + csqueue);
           childQueues.add(csqueue);
           break;

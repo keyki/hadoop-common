@@ -29,8 +29,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -59,6 +57,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.TestSchedulerUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.a.DummyScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptAddedSchedulerEvent;
@@ -75,6 +74,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import junit.framework.Assert;
 
 
 public class TestCapacityScheduler {
@@ -102,12 +103,10 @@ public class TestCapacityScheduler {
   @Before
   public void setUp() throws Exception {
     resourceManager = new ResourceManager();
-    CapacitySchedulerConfiguration csConf 
-       = new CapacitySchedulerConfiguration();
+    CapacitySchedulerConfiguration csConf = new CapacitySchedulerConfiguration();
     setupQueueConfiguration(csConf);
     YarnConfiguration conf = new YarnConfiguration(csConf);
-    conf.setClass(YarnConfiguration.RM_SCHEDULER, 
-        CapacityScheduler.class, ResourceScheduler.class);
+    conf.setClass(YarnConfiguration.RM_SCHEDULER, DummyScheduler.class, ResourceScheduler.class);
     resourceManager.init(conf);
     resourceManager.getRMContext().getContainerTokenSecretManager().rollMasterKey();
     resourceManager.getRMContext().getNMTokenSecretManager().rollMasterKey();
@@ -305,7 +304,7 @@ public class TestCapacityScheduler {
 
     conf.setCapacity(A, A_CAPACITY);
     conf.setCapacity(B, B_CAPACITY);
-    
+
     // Define 2nd-level queues
     conf.setQueues(A, new String[] {"a1", "a2"});
     conf.setCapacity(A1, A1_CAPACITY);
