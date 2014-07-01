@@ -153,8 +153,7 @@ public class Application {
     context.setQueue(this.queue);
     
     // Set up the container launch context for the application master
-    ContainerLaunchContext amContainer
-        = Records.newRecord(ContainerLaunchContext.class);
+    ContainerLaunchContext amContainer = Records.newRecord(ContainerLaunchContext.class);
     context.setAMContainerSpec(amContainer);
     context.setResource(Resources.createResource(
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB));
@@ -167,16 +166,13 @@ public class Application {
     resourceManager.getClientRMService().submitApplication(request);
 
     // Notify scheduler
-    AppAddedSchedulerEvent addAppEvent =
-        new AppAddedSchedulerEvent(this.applicationId, this.queue, "user");
+    AppAddedSchedulerEvent addAppEvent = new AppAddedSchedulerEvent(this.applicationId, this.queue, "user");
     scheduler.handle(addAppEvent);
-    AppAttemptAddedSchedulerEvent addAttemptEvent =
-        new AppAttemptAddedSchedulerEvent(this.applicationAttemptId, false);
+    AppAttemptAddedSchedulerEvent addAttemptEvent = new AppAttemptAddedSchedulerEvent(this.applicationAttemptId, false);
     scheduler.handle(addAttemptEvent);
   }
   
-  public synchronized void addResourceRequestSpec(
-      Priority priority, Resource capability) {
+  public synchronized void addResourceRequestSpec(Priority priority, Resource capability) {
     Resource currentSpec = requestSpec.put(priority, capability);
     if (currentSpec != null) {
       throw new IllegalStateException("Resource spec already exists for " +
@@ -267,6 +263,7 @@ public class Application {
   private synchronized void addResourceRequest(
       Priority priority, Map<String, ResourceRequest> requests, 
       String resourceName, Resource capability) {
+
     ResourceRequest request = requests.get(resourceName);
     if (request == null) {
       request = 
@@ -304,12 +301,10 @@ public class Application {
     }
     
     // Get resources from the ResourceManager
-    Allocation allocation = resourceManager.getResourceScheduler().allocate(
-        applicationAttemptId, new ArrayList<ResourceRequest>(ask),
-        new ArrayList<ContainerId>(), null, null);
+    Allocation allocation = resourceManager.getResourceScheduler()
+      .allocate(applicationAttemptId, new ArrayList<ResourceRequest>(ask), new ArrayList<ContainerId>(), null, null);
     System.out.println("-=======" + applicationAttemptId);
-    System.out.println("----------" + resourceManager.getRMContext().getRMApps()
-        .get(applicationId).getRMAppAttempt(applicationAttemptId));
+    System.out.println("----------" + resourceManager.getRMContext().getRMApps().get(applicationId).getRMAppAttempt(applicationAttemptId));
     List<Container> containers = allocation.getContainers();
 
     // Clear state for next interaction with ResourceManager
@@ -346,9 +341,12 @@ public class Application {
   public synchronized void schedule() throws IOException, YarnException {
     assign(getResources());
   }
+
+  public void moveToQueue(String queue) throws YarnException {
+    resourceManager.getResourceScheduler().moveApplication(applicationId, queue);
+  }
   
-  private synchronized void assign(Priority priority, NodeType type, 
-      List<Container> containers) throws IOException, YarnException {
+  private synchronized void assign(Priority priority, NodeType type, List<Container> containers) throws IOException, YarnException {
     for (Iterator<Container> i=containers.iterator(); i.hasNext();) {
       Container container = i.next();
       String host = container.getNodeId().toString();
@@ -375,14 +373,10 @@ public class Application {
             updateResourceRequests(requests.get(priority), type, task);
 
             // Launch the container
-            StartContainerRequest scRequest =
-                StartContainerRequest.newInstance(createCLC(),
-                  container.getContainerToken());
-            List<StartContainerRequest> list =
-                new ArrayList<StartContainerRequest>();
+            StartContainerRequest scRequest = StartContainerRequest.newInstance(createCLC(), container.getContainerToken());
+            List<StartContainerRequest> list = new ArrayList<StartContainerRequest>();
             list.add(scRequest);
-            StartContainersRequest allRequests =
-                StartContainersRequest.newInstance(list);
+            StartContainersRequest allRequests = StartContainersRequest.newInstance(list);
             nodeManager.startContainers(allRequests);
             break;
           }

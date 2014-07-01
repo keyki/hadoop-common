@@ -52,7 +52,7 @@ public class AppSchedulingInfo {
   private static final Log LOG = LogFactory.getLog(AppSchedulingInfo.class);
   private final ApplicationAttemptId applicationAttemptId;
   final ApplicationId applicationId;
-  private final String queueName;
+  private String queueName;
   Queue queue;
   final String user;
   private final AtomicInteger containerIdCounter = new AtomicInteger(0);
@@ -276,8 +276,6 @@ public class AppSchedulingInfo {
    * The {@link ResourceScheduler} is allocating data-local resources to the
    * application.
    * 
-   * @param allocatedContainers
-   *          resources allocated to the application
    */
   synchronized private void allocateNodeLocal( 
       SchedulerNode node, Priority priority, 
@@ -302,8 +300,6 @@ public class AppSchedulingInfo {
    * The {@link ResourceScheduler} is allocating data-local resources to the
    * application.
    * 
-   * @param allocatedContainers
-   *          resources allocated to the application
    */
   synchronized private void allocateRackLocal(
       SchedulerNode node, Priority priority,
@@ -321,8 +317,6 @@ public class AppSchedulingInfo {
    * The {@link ResourceScheduler} is allocating data-local resources to the
    * application.
    * 
-   * @param allocatedContainers
-   *          resources allocated to the application
    */
   synchronized private void allocateOffSwitch(
       SchedulerNode node, Priority priority,
@@ -377,6 +371,7 @@ public class AppSchedulingInfo {
     activeUsersManager = newQueue.getActiveUsersManager();
     activeUsersManager.activateApplication(user, applicationId);
     this.queue = newQueue;
+    this.queueName = newQueue.getQueueName();
   }
 
   synchronized public void stop(RMAppAttemptState rmAppAttemptFinalState) {
