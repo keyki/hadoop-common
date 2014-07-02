@@ -43,7 +43,6 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
-import org.apache.hadoop.yarn.util.resource.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -546,4 +545,56 @@ public class QueueMetrics implements MetricsSource {
   public MetricsSystem getMetricsSystem() {
     return metricsSystem;
   }
+
+
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("QueueMetrics{");
+    sb.append("appsSubmitted=").append(getAppsSubmitted());
+    sb.append("\n");
+    sb.append(", appsRunning=").append(getAppsRunning());
+    sb.append("\n");
+    sb.append(", appsPending=").append(getAppsPending());
+    sb.append("\n");
+    sb.append(", appsCompleted=").append(getAppsCompleted());
+    sb.append("\n");
+    sb.append(", appsKilled=").append(getAppsKilled());
+    sb.append("\n");
+    sb.append(", appsFailed=").append(getAppsFailed());
+    sb.append("\n");
+    sb.append(", allocatedMB=").append(getAllocatedMB());
+    sb.append("\n");
+    sb.append(", allocatedVCores=").append(getAllocatedVirtualCores());
+    sb.append("\n");
+    sb.append(", allocatedContainers=").append(getAllocatedContainers());
+    sb.append("\n");
+    sb.append(", availableMB=").append(getAvailableMB());
+    sb.append("\n");
+    sb.append(", availableVCores=").append(getAvailableVirtualCores());
+    sb.append("\n");
+    sb.append(", pendingMB=").append(getPendingMB());
+    sb.append("\n");
+    sb.append(", pendingVCores=").append(getPendingVirtualCores());
+    sb.append("\n");
+    sb.append(", pendingContainers=").append(getPendingContainers());
+    sb.append("\n");
+    sb.append(", reservedMB=").append(getReservedMB());
+    sb.append("\n");
+    sb.append(", reservedVCores=").append(getReservedVirtualCores());
+    sb.append("\n");
+    sb.append(", reservedContainers=").append(getReservedContainers());
+    sb.append("\n");
+    sb.append(", activeUsers=").append(getActiveUsers());
+    sb.append("\n");
+    sb.append(", activeApplications=").append(getActiveApps());
+    sb.append("\n");
+    sb.append(", queueName='").append(queueName).append('\'');
+    sb.append("\n");
+    sb.append(", parent=").append(parent);
+    sb.append('}');
+    return sb.toString();
+  }
+
+
 }

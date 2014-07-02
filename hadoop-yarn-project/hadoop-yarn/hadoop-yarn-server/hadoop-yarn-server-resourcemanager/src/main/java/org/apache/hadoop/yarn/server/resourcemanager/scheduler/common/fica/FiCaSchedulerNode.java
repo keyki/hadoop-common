@@ -105,8 +105,7 @@ public class FiCaSchedulerNode extends SchedulerNode {
    * @param applicationId application
    * @param rmContainer allocated container
    */
-  public synchronized void allocateContainer(ApplicationId applicationId, 
-      RMContainer rmContainer) {
+  public synchronized void allocateContainer(ApplicationId applicationId, RMContainer rmContainer) {
     Container container = rmContainer.getContainer();
     deductAvailableResource(container.getResource());
     ++numContainers;

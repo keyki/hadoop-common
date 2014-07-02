@@ -57,8 +57,7 @@ public class Task {
     state = State.PENDING;
     
     // Special case: Don't care about locality
-    if (!(hosts.length == 1 && 
-        hosts[0].equals(ResourceRequest.ANY))) {
+    if (!(hosts.length == 1 && hosts[0].equals(ResourceRequest.ANY))) {
       for (String host : hosts) {
         this.hosts.add(host);
         this.racks.add(Application.resolve(host));

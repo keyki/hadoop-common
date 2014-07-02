@@ -412,8 +412,7 @@ public class SchedulerApplicationAttempt {
   }
 
   public synchronized void addSchedulingOpportunity(Priority priority) {
-    schedulingOpportunities.setCount(priority,
-        schedulingOpportunities.count(priority) + 1);
+    schedulingOpportunities.setCount(priority, schedulingOpportunities.count(priority) + 1);
   }
   
   public synchronized void subtractSchedulingOpportunity(Priority priority) {
@@ -466,8 +465,7 @@ public class SchedulerApplicationAttempt {
     return this.lastScheduledContainer;
   }
 
-  public synchronized void transferStateFromPreviousAttempt(
-      SchedulerApplicationAttempt appAttempt) {
+  public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
     this.liveContainers = appAttempt.getLiveContainersMap();
     // this.reReservations = appAttempt.reReservations;
     this.currentConsumption = appAttempt.getCurrentConsumption();
@@ -476,8 +474,7 @@ public class SchedulerApplicationAttempt {
     // this.newlyAllocatedContainers = appAttempt.newlyAllocatedContainers;
     // this.schedulingOpportunities = appAttempt.schedulingOpportunities;
     this.lastScheduledContainer = appAttempt.getLastScheduledContainer();
-    this.appSchedulingInfo
-      .transferStateFromPreviousAppSchedulingInfo(appAttempt.appSchedulingInfo);
+    this.appSchedulingInfo.transferStateFromPreviousAppSchedulingInfo(appAttempt.appSchedulingInfo);
   }
   
   public synchronized void move(Queue newQueue) {
